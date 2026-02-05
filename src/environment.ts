@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { logger } from './support/logger';
 
 const LOGGING_LEVELS = [
   'error',

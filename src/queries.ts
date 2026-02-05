@@ -1,5 +1,5 @@
 import { query, sparqlEscapeUri, sparqlEscapeDate, update } from "mu"
-import { RECOGNITION_STATUS_CODES } from "./utils/constants";
+import { RECOGNITION_STATUS_CODES } from "./constants";
 
 
 export const retrieveAssociationsBasedOnRecognitionPeriods = async (periodUris: string[]) => {
