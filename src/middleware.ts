@@ -2,6 +2,7 @@ import { Response } from "express";
 import AppError, { isOperational } from "./support/app-error";
 import { logger } from "./support/logger";
 import { StatusCodes } from "http-status-codes";
+import { exitProcess } from "./utils";
 
 export const errorHandler = (error: Error, res?: Response) => {
   if (!isOperational(error)) {
@@ -9,11 +10,7 @@ export const errorHandler = (error: Error, res?: Response) => {
     if (res && !res.headersSent) {
       res.status(500).json({ errors: [{ title: 'An unknown error occured' }] });
     }
-    if (process.env.NODE_ENV === 'production') {
-      process.exit(1);
-    } else {
-      logger.error('Process not ending in development mode');
-    }
+    exitProcess(1);
   } else {
     logger.error('Handling operational error: ', error);
     if (res && !res.headersSent) {

@@ -7,8 +7,9 @@ import { ENV } from './src/environment';
 import { logger } from './src/support/logger';
 import { errorHandler } from './src/middleware';
 import { NextFunction, Request, Response } from 'express';
-import AppError from './src/support/app-error';
+import AppError, { isError } from './src/support/app-error';
 import { StatusCodes } from 'http-status-codes';
+import { exitProcess } from './src/utils';
 
 app.use(bodyParser.json({ limit: "50mb" }))
 
@@ -32,6 +33,7 @@ app.post('/delta', async (req, res) => {
   logger.debug(`Updating association statuses based on current time ${now}`)
   res.status(StatusCodes.ACCEPTED).send();
   await updateAssociationStatuses(now, associationsToUpdate);
+  logger.debug('Association statuses updated successfully')
 });
 
 app.post('/update-all', async (_req, res) => {
@@ -39,6 +41,7 @@ app.post('/update-all', async (_req, res) => {
   res.status(StatusCodes.ACCEPTED).send();
   const now = new Date();
   await updateAssociationStatuses(now);
+  logger.debug('Association statuses updated successfully')
 })
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => errorHandler(err, res));
@@ -54,8 +57,17 @@ CronJob.from({
     logger.debug('Running cronjob to update incorrect/missing/outdates association recognition-statuses')
     const now = new Date();
     await updateAssociationStatuses(now);
+    logger.debug('Association statuses updated successfully')
   },
   runOnInit: ENV.RUN_CRONJOB_ON_START,
   waitForCompletion: true,
+  errorHandler: (error: unknown) => {
+    if(!isError(error)){
+      logger.error('Unknown error occured')
+      exitProcess(1);
+      return;
+    }
+    errorHandler(error);
+  },
 })
 
