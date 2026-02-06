@@ -25,7 +25,7 @@ export const retrieveAssociationsBasedOnRecognitionPeriods = async (periodUris: 
     } 
   `;
 
-  const response = await query(sparqlQuery, { sudo: true });
+  const response = await query(sparqlQuery);
   return response.results.bindings.map((binding) => binding['association'].value);
 }
 
@@ -125,5 +125,5 @@ export const updateAssociationStatuses = async (referenceDate: Date, association
       }
     }
   `
-  await update(sparqlQuery, { sudo: true });
+  await update(sparqlQuery);
 }
