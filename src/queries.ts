@@ -2,8 +2,8 @@ import { query, sparqlEscapeUri, sparqlEscapeDate, update } from "mu"
 import { RECOGNITION_STATUS_CODES } from "./constants";
 
 
-export const retrieveAssociationsBasedOnRecognitionPeriods = async (periodUris: string[]) => {
-  if(!periodUris.length){
+export const retrieveAssociations = async (periodOrRecognitionOrAssociationUris: string[]) => {
+  if(!periodOrRecognitionOrAssociationUris.length){
     return [];
   }
   const sparqlQuery = /* sparql */`
@@ -11,16 +11,31 @@ export const retrieveAssociationsBasedOnRecognitionPeriods = async (periodUris: 
 
     SELECT DISTINCT ?association
     WHERE {
-      GRAPH <http://mu.semte.ch/graphs/organizations> {
-        ?association
+      
+      {
+        VALUES ?association {
+          ${periodOrRecognitionOrAssociationUris.map(sparqlEscapeUri).join('\n')}
+        }
+        ?association a fv:Vereniging.
+      }
+      UNION
+      {
+        VALUES ?recognition {
+          ${periodOrRecognitionOrAssociationUris.map(sparqlEscapeUri).join('\n')}
+        }
+        ?association 
           a fv:Vereniging;
           fv:heeftErkenning ?recognition.
-        ?recognition 
-          a fv:Erkenning;
-          fv:geldigheidsperiode ?period.
+      }
+      UNION
+      {
         VALUES ?period {
-          ${periodUris.map(sparqlEscapeUri).join('\n')}
+          ${periodOrRecognitionOrAssociationUris.map(sparqlEscapeUri).join('\n')}
         }
+        ?association 
+          a fv:Vereniging;
+          fv:heeftErkenning ?recognition.
+        ?recognition fv:geldigheidsperiode ?period.
       }
     } 
   `;
@@ -44,85 +59,93 @@ export const updateAssociationStatuses = async (referenceDate: Date, association
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
     DELETE {
-      GRAPH <http://mu.semte.ch/graphs/organizations> {
-        ?association ext:recognitionStatus ?oldStatus.
-      }
+      ?association ext:recognitionStatus ?oldStatus.
     }
     INSERT {
-      GRAPH <http://mu.semte.ch/graphs/organizations> {
-        ?association ext:recognitionStatus ?newStatus.
-      }
+      ?association ext:recognitionStatus ?newStatus.
     }
     WHERE {
-      GRAPH <http://mu.semte.ch/graphs/organizations> {
-        ?association
-          a fv:Vereniging.
+      ?association
+        a fv:Vereniging.
 
-        ${associations ? `VALUES ?association {
-          ${associations?.map(sparqlEscapeUri).join('\n')}
-        }` : ''}
-        
-        OPTIONAL {
-          ?association ext:recognitionStatus ?oldStatus.
-        }
-
-        BIND(EXISTS {
-          ?association fv:heeftErkenning ?recognition.
-            ?recognition fv:geldigheidsperiode ?period.
-            ?period 
-              m8g:startTime ?recognitionStart;
-              m8g:endTime ?recognitionEnd.
-            FILTER(
-              ?recognitionStart <= ${sparqlEscapeDate(referenceDate)} &&
-              ?recognitionEnd   >= ${sparqlEscapeDate(referenceDate)}
-            )
-        } AS ?hasActiveRecognition)
-
-        BIND(EXISTS {
-          ?association fv:heeftErkenning ?recognition.
-            ?recognition fv:geldigheidsperiode ?period.
-            ?period 
-              m8g:startTime ?recognitionStart;
-              m8g:endTime ?recognitionEnd.
-            FILTER(
-              ?recognitionEnd < ${sparqlEscapeDate(referenceDate)}
-            )
-        } AS ?hasExpiredRecognition)
-
-        BIND(EXISTS {
-          ?association fv:heeftErkenning ?recognition.
-            ?recognition fv:geldigheidsperiode ?period.
-            ?period 
-              m8g:startTime ?recognitionStart;
-              m8g:endTime ?recognitionEnd.
-            FILTER(
-              ?recognitionStart > ${sparqlEscapeDate(referenceDate)}
-            )
-        } AS ?hasUpcomingRecognition)
-
-        {
-          BIND(${sparqlEscapeUri(RECOGNITION_STATUS_CODES.ACTIVE)} AS ?newStatus)
-          FILTER(?hasActiveRecognition)
-        }
-        UNION
-        {
-          BIND(${sparqlEscapeUri(RECOGNITION_STATUS_CODES.EXPIRED)} AS ?newStatus)
-          FILTER(?hasExpiredRecognition && !?hasActiveRecognition && !?hasUpcomingRecognition)
-        }
-        UNION
-        {
-          BIND(${sparqlEscapeUri(RECOGNITION_STATUS_CODES.UPCOMING)} AS ?newStatus)
-          FILTER(!?hasActiveRecognition && ?hasUpcomingRecognition)
-        }
-
-        FILTER(
-          ?hasActiveRecognition ||
-          ?hasUpcomingRecognition ||
-          ?hasExpiredRecognition
-        )
-
-        FILTER(!BOUND(?oldStatus) || ?oldStatus != ?newStatus)
+      ${associations ? `VALUES ?association {
+        ${associations?.map(sparqlEscapeUri).join('\n')}
+      }` : ''}
+      
+      OPTIONAL {
+        ?association ext:recognitionStatus ?oldStatus.
       }
+
+      BIND(EXISTS {
+        ?association fv:heeftErkenning ?recognition.
+          ?recognition fv:geldigheidsperiode ?period.
+          ?period 
+            m8g:startTime ?recognitionStart;
+            m8g:endTime ?recognitionEnd.
+          FILTER(
+            ?recognitionStart <= ${sparqlEscapeDate(referenceDate)} &&
+            ?recognitionEnd   >= ${sparqlEscapeDate(referenceDate)}
+          )
+      } AS ?hasActiveRecognition)
+
+      BIND(EXISTS {
+        ?association fv:heeftErkenning ?recognition.
+          ?recognition fv:geldigheidsperiode ?period.
+          ?period 
+            m8g:startTime ?recognitionStart;
+            m8g:endTime ?recognitionEnd.
+          FILTER(
+            ?recognitionEnd < ${sparqlEscapeDate(referenceDate)}
+          )
+      } AS ?hasExpiredRecognition)
+
+      BIND(EXISTS {
+        ?association fv:heeftErkenning ?recognition.
+          ?recognition fv:geldigheidsperiode ?period.
+          ?period 
+            m8g:startTime ?recognitionStart;
+            m8g:endTime ?recognitionEnd.
+          FILTER(
+            ?recognitionStart > ${sparqlEscapeDate(referenceDate)}
+          )
+      } AS ?hasUpcomingRecognition)
+
+      {
+        BIND(${sparqlEscapeUri(RECOGNITION_STATUS_CODES.ACTIVE)} AS ?newStatus)
+        FILTER(?hasActiveRecognition)
+      }
+      UNION
+      {
+        BIND(${sparqlEscapeUri(RECOGNITION_STATUS_CODES.EXPIRED)} AS ?newStatus)
+        FILTER(?hasExpiredRecognition && !?hasActiveRecognition && !?hasUpcomingRecognition)
+      }
+      UNION
+      {
+        BIND(${sparqlEscapeUri(RECOGNITION_STATUS_CODES.UPCOMING)} AS ?newStatus)
+        FILTER(!?hasActiveRecognition && ?hasUpcomingRecognition)
+      }
+
+      FILTER(
+        ?hasActiveRecognition ||
+        ?hasUpcomingRecognition ||
+        ?hasExpiredRecognition
+      )
+      FILTER(!BOUND(?oldStatus) || ?oldStatus != ?newStatus)
+    };
+    DELETE {
+      ?association ext:recognitionStatus ?oldStatus.
+    }
+    WHERE {
+      ?association a fv:Vereniging ;
+                  ext:recognitionStatus ?oldStatus .
+
+      FILTER NOT EXISTS {
+        ?association fv:heeftErkenning ?recognition.
+      }
+
+      ${associations ? `VALUES ?association {
+        ${associations?.map(sparqlEscapeUri).join('\n')}
+      }` : ''}
     }
   `
   await update(sparqlQuery);

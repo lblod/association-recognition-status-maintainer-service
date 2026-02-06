@@ -1,7 +1,7 @@
 import { app } from 'mu';
 import bodyParser from 'body-parser';
 import { DeltaBody, DeltaStatement } from './src/types';
-import { retrieveAssociationsBasedOnRecognitionPeriods, updateAssociationStatuses } from './src/queries';
+import { retrieveAssociations, updateAssociationStatuses } from './src/queries';
 import { CronJob } from 'cron';
 import { ENV } from './src/environment';
 import { logger } from './src/support/logger';
@@ -18,12 +18,13 @@ app.post('/delta', async (req, res) => {
   if (!changesets || !changesets.length) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Request body does not contain any delta messages', true);
   }
-  const statementFilter = (statement: DeltaStatement) => statement.predicate.value === 'http://data.europa.eu/m8g/startTime' || statement.predicate.value === 'http://data.europa.eu/m8g/endTime'
+  const statementFilter = (statement: DeltaStatement) => statement.predicate.value === 'http://data.europa.eu/m8g/startTime' || statement.predicate.value === 'http://data.europa.eu/m8g/endTime' || statement.predicate.value === 'https://data.vlaanderen.be/ns/FeitelijkeVerenigingen#heeftErkenning' || statement.predicate.value === 'https://data.vlaanderen.be/ns/FeitelijkeVerenigingen#geldigheidsperiode';
+
   const inserts = changesets.map((changeset) => changeset.inserts).flat().filter(statementFilter);
   const deletes = changesets.map((changeset) => changeset.deletes).flat().filter(statementFilter);
 
   const affectedSubjects = [...inserts, ...deletes].map(statement => statement.subject).map((uri) => uri.value);
-  const associationsToUpdate = await retrieveAssociationsBasedOnRecognitionPeriods(affectedSubjects);
+  const associationsToUpdate = await retrieveAssociations(affectedSubjects);
   if (!associationsToUpdate.length) {
     logger.debug('No associations resources found to update');
     return res.status(StatusCodes.OK).send();
@@ -62,7 +63,7 @@ CronJob.from({
   runOnInit: ENV.RUN_CRONJOB_ON_START,
   waitForCompletion: true,
   errorHandler: (error: unknown) => {
-    if(!isError(error)){
+    if (!isError(error)) {
       logger.error('Unknown error occured')
       exitProcess(1);
       return;
