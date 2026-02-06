@@ -6,13 +6,13 @@ import { exitProcess } from "./utils";
 
 export const errorHandler = (error: Error, res?: Response) => {
   if (!isOperational(error)) {
-    logger.error('Handling non-operational error: ', error);
+    logger.error("Handling non-operational error: ", error);
     if (res && !res.headersSent) {
-      res.status(500).json({ errors: [{ title: 'An unknown error occured' }] });
+      res.status(500).json({ errors: [{ title: "An unknown error occured" }] });
     }
     exitProcess(1);
   } else {
-    logger.error('Handling operational error: ', error);
+    logger.error("Handling operational error: ", error);
     if (res && !res.headersSent) {
       const statusCode =
         error instanceof AppError && error.statusCode

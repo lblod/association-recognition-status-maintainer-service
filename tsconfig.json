@@ -5,13 +5,9 @@
     "noEmit": true,
     "strict": true,
     "checkJs": true,
-    "lib": [ "dom", "es2022" ],
+    "lib": ["dom", "es2022"],
     "moduleResolution": "bundler",
-    "skipLibCheck": true,
+    "skipLibCheck": true
   },
-  "include": [
-    "app.ts",
-    "src/**/*",
-    "types/**/*"
-  ]
+  "include": ["app.ts", "src/**/*", "types/**/*"]
 }

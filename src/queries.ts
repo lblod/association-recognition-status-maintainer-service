@@ -1,12 +1,13 @@
-import { query, sparqlEscapeUri, sparqlEscapeDate, update } from "mu"
+import { query, sparqlEscapeUri, sparqlEscapeDate, update } from "mu";
 import { RECOGNITION_STATUS_CODES } from "./constants";
 
-
-export const retrieveAssociations = async (periodOrRecognitionOrAssociationUris: string[]) => {
-  if(!periodOrRecognitionOrAssociationUris.length){
+export const retrieveAssociations = async (
+  periodOrRecognitionOrAssociationUris: string[],
+) => {
+  if (!periodOrRecognitionOrAssociationUris.length) {
     return [];
   }
-  const sparqlQuery = /* sparql */`
+  const sparqlQuery = /* sparql */ `
     PREFIX fv: <https://data.vlaanderen.be/ns/FeitelijkeVerenigingen#>
 
     SELECT DISTINCT ?association
@@ -14,14 +15,14 @@ export const retrieveAssociations = async (periodOrRecognitionOrAssociationUris:
       
       {
         VALUES ?association {
-          ${periodOrRecognitionOrAssociationUris.map(sparqlEscapeUri).join('\n')}
+          ${periodOrRecognitionOrAssociationUris.map(sparqlEscapeUri).join("\n")}
         }
         ?association a fv:Vereniging.
       }
       UNION
       {
         VALUES ?recognition {
-          ${periodOrRecognitionOrAssociationUris.map(sparqlEscapeUri).join('\n')}
+          ${periodOrRecognitionOrAssociationUris.map(sparqlEscapeUri).join("\n")}
         }
         ?association 
           a fv:Vereniging;
@@ -30,7 +31,7 @@ export const retrieveAssociations = async (periodOrRecognitionOrAssociationUris:
       UNION
       {
         VALUES ?period {
-          ${periodOrRecognitionOrAssociationUris.map(sparqlEscapeUri).join('\n')}
+          ${periodOrRecognitionOrAssociationUris.map(sparqlEscapeUri).join("\n")}
         }
         ?association 
           a fv:Vereniging;
@@ -41,18 +42,23 @@ export const retrieveAssociations = async (periodOrRecognitionOrAssociationUris:
   `;
 
   const response = await query(sparqlQuery);
-  return response.results.bindings.map((binding) => binding['association'].value);
-}
+  return response.results.bindings.map(
+    (binding) => binding["association"].value,
+  );
+};
 
 /**
  * Function which 'updates' the status for a given array of `recognitions`.
  * If `recognitions` is undefined, it updates the status of all `recognition` resources.
  */
-export const updateAssociationStatuses = async (referenceDate: Date, associations?: string[]) => {
+export const updateAssociationStatuses = async (
+  referenceDate: Date,
+  associations?: string[],
+) => {
   if (associations && !associations.length) {
     return;
   }
-  const sparqlQuery = /* sparql */`
+  const sparqlQuery = /* sparql */ `
     PREFIX adms: <http://www.w3.org/ns/adms#>
     PREFIX fv: <https://data.vlaanderen.be/ns/FeitelijkeVerenigingen#>
     PREFIX m8g: <http://data.europa.eu/m8g/>
@@ -68,9 +74,13 @@ export const updateAssociationStatuses = async (referenceDate: Date, association
       ?association
         a fv:Vereniging.
 
-      ${associations ? `VALUES ?association {
-        ${associations?.map(sparqlEscapeUri).join('\n')}
-      }` : ''}
+      ${
+        associations
+          ? `VALUES ?association {
+        ${associations?.map(sparqlEscapeUri).join("\n")}
+      }`
+          : ""
+      }
       
       OPTIONAL {
         ?association ext:recognitionStatus ?oldStatus.
@@ -143,10 +153,14 @@ export const updateAssociationStatuses = async (referenceDate: Date, association
         ?association fv:heeftErkenning ?recognition.
       }
 
-      ${associations ? `VALUES ?association {
-        ${associations?.map(sparqlEscapeUri).join('\n')}
-      }` : ''}
+      ${
+        associations
+          ? `VALUES ?association {
+        ${associations?.map(sparqlEscapeUri).join("\n")}
+      }`
+          : ""
+      }
     }
-  `
+  `;
   await update(sparqlQuery);
-}
+};

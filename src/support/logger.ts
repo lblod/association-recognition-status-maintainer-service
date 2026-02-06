@@ -1,5 +1,5 @@
-import { createLogger, format, transports } from 'winston';
-import { ENV } from '../environment';
+import { createLogger, format, transports } from "winston";
+import { ENV } from "../environment";
 
 export const logger = createLogger({
   level: ENV.LOGGING_LEVEL,
