@@ -62,13 +62,13 @@ export const updateAssociationStatuses = async (
     PREFIX adms: <http://www.w3.org/ns/adms#>
     PREFIX fv: <https://data.vlaanderen.be/ns/FeitelijkeVerenigingen#>
     PREFIX m8g: <http://data.europa.eu/m8g/>
-    PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+    PREFIX ver: <http://data.lblod.info/vocabularies/FeitelijkeVerenigingen/>
 
     DELETE {
-      ?association ext:recognitionStatus ?oldStatus.
+      ?association ver:recognitionStatus ?oldStatus.
     }
     INSERT {
-      ?association ext:recognitionStatus ?newStatus.
+      ?association ver:recognitionStatus ?newStatus.
     }
     WHERE {
       ?association
@@ -83,7 +83,7 @@ export const updateAssociationStatuses = async (
       }
       
       OPTIONAL {
-        ?association ext:recognitionStatus ?oldStatus.
+        ?association ver:recognitionStatus ?oldStatus.
       }
 
       BIND(EXISTS {
@@ -143,11 +143,11 @@ export const updateAssociationStatuses = async (
       FILTER(!BOUND(?oldStatus) || ?oldStatus != ?newStatus)
     };
     DELETE {
-      ?association ext:recognitionStatus ?oldStatus.
+      ?association ver:recognitionStatus ?oldStatus.
     }
     WHERE {
       ?association a fv:Vereniging ;
-                  ext:recognitionStatus ?oldStatus .
+                  ver:recognitionStatus ?oldStatus .
 
       FILTER NOT EXISTS {
         ?association fv:heeftErkenning ?recognition.
