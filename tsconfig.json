@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "allowSyntheticDefaultImports": true,
+    "noEmit": true,
+    "strict": true,
+    "checkJs": true,
+    "lib": ["dom", "es2022"],
+    "moduleResolution": "bundler",
+    "skipLibCheck": true
+  },
+  "include": ["app.ts", "src/**/*", "types/**/*"]
+}

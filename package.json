@@ -1,0 +1,33 @@
+{
+  "name": "association-recognition-status-maintainer-service",
+  "version": "0.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint",
+    "typecheck": "tsc"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@eslint/json": "^0.14.0",
+    "@types/express": "^4.17.25",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "globals": "^17.3.0",
+    "jiti": "^2.6.1",
+    "prettier": "^3.8.1",
+    "release-it": "^19.2.4",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0"
+  },
+  "dependencies": {
+    "cron": "^4.4.0",
+    "http-status-codes": "^2.3.0",
+    "winston": "^3.19.0",
+    "zod": "^4.3.6"
+  }
+}
