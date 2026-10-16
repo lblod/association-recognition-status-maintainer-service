@@ -83,6 +83,7 @@ CronJob.from({
     await updateAssociationStatuses(now);
     logger.debug("Association statuses updated successfully");
   },
+  start: true,
   runOnInit: ENV.RUN_CRONJOB_ON_START,
   waitForCompletion: true,
   errorHandler: (error: unknown) => {
